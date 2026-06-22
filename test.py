@@ -21,6 +21,7 @@ class PetalTestApp(App):
 
     def _setup_pins(self):
         ls_a, ls_b, ls_c = self.config.ls_pin[0], self.config.ls_pin[1], self.config.ls_pin[2]
+        ls_c.init(ls_c.IN)
         ls_b.init(ls_b.OUT)
         ls_b.off()        # RSTn LOW: assert hardware reset
         ls_a.init(ls_a.OUT)
@@ -29,7 +30,9 @@ class PetalTestApp(App):
         ls_b.on()         # RSTn HIGH: release reset
         ls_a.on()         # EN HIGH: enable → triggers INITIALIZATION (register reset)
         time.sleep_ms(50) # wait for INITIALIZATION to complete → chip reaches STANDBY
-        ls_c.init(ls_c.IN)
+        self._send(0x00, 0x40)
+        time.sleep_ms(50)
+        self._send_range(0x08, 0x13, 0x40)
 
     def _send_range(self, start, finish, data, pause=False):
         for i in range(start, finish+1):
@@ -52,9 +55,6 @@ class PetalTestApp(App):
             self.minimise()
 
         if self.button_states.get(BUTTON_TYPES["RIGHT"]):
-            self._send(0x00, 0x40)
-            time.sleep_ms(10)
-            self._send_range(0x08, 0x13, 0x40)
             self._send_range(0x14, 0x37, 0xff, True)
             time.sleep_ms(300)
 
