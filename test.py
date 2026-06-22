@@ -8,11 +8,45 @@ import time
 AL5887 = 0x30
 PORT = 4
 
+# Need to re-map the LEDs because they're wired up weirdly to the chip
+# This happens _after_ any other LED-based modifiers
+led_map = [
+    # Outer band, first half
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+    # Outer band, second half
+    27, 28, 29, 30, 31, 32, 33, 34, 35,
+    # Middle band, first half
+    10, 11, 12, 13, 14, 15,
+    # Middle band, second half
+    21, 22, 23, 24, 25, 26,
+    # Inner band, first half
+    16, 17, 18,
+    # Inner band, second half
+    19, 20,
+]
+
+OUTER  = 2
+MIDDLE = 64
+INNER  = 2
+
+led_brightness = [
+    OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, 
+    MIDDLE, MIDDLE, MIDDLE, MIDDLE, MIDDLE, MIDDLE, MIDDLE, MIDDLE, MIDDLE, MIDDLE, MIDDLE, MIDDLE, 
+    INNER, INNER, INNER, INNER, INNER, 
+]
+
+have_petals = [
+    False,
+    False,
+    False,
+    False,
+    False,
+    False,
+]
+
 class PetalTestApp(App):
-    def __init__(self, config=None):
-        if config is None:
-            config = HexpansionConfig(PORT)
-        self.config = config
+    def __init__(self):
+        self.config = HexpansionConfig(PORT)
         self.i2c_devices = []
         self.ls_c_value = None
         self.button_states = Buttons(self)
@@ -32,13 +66,12 @@ class PetalTestApp(App):
         time.sleep_ms(50) # wait for INITIALIZATION to complete → chip reaches STANDBY
         self._send(0x00, 0x40)
         time.sleep_ms(50)
-        self._send_range(0x08, 0x13, 0x40)
 
-    def _send_range(self, start, finish, data, pause=False):
-        for i in range(start, finish+1):
-            self._send(i, data)
-            if pause:
-                time.sleep_ms(50)
+    def led_on(self, num):
+        brightness = led_brightness[num]
+        actual_num = led_map[num]
+        addr = 0x14 + actual_num
+        self._send(addr, brightness)
 
     def _send(self, addr, data):
         print(f"Sending: addr [{addr}] data [{data}]... ")
@@ -55,9 +88,10 @@ class PetalTestApp(App):
             self.minimise()
 
         if self.button_states.get(BUTTON_TYPES["RIGHT"]):
-            self._send_range(0x14, 0x37, 0xff, True)
-            time.sleep_ms(300)
-            self._send_range(0x14, 0x37, 0x00, True)
+            for i in range(36):
+                self.led_on(i)
+
+        time.sleep_ms(300)
 
     def draw(self, ctx):
         ctx.save()
