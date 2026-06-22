@@ -3,6 +3,9 @@ import asyncio
 from app import App
 from events.input import Buttons, BUTTON_TYPES
 from system.hexpansion.config import HexpansionConfig
+from system.eventbus import eventbus
+from system.hexpansion.events import HexpansionRemovalEvent, HexpansionInsertionEvent
+from system.hexpansion.app import HexpansionManagerApp
 import time
 
 AL5887 = 0x30
@@ -35,7 +38,7 @@ led_brightness = [
     INNER, INNER, INNER, INNER, INNER, 
 ]
 
-have_petals = [
+petals = [
     False,
     False,
     False,
@@ -46,15 +49,34 @@ have_petals = [
 
 class PetalTestApp(App):
     def __init__(self):
-        self.config = HexpansionConfig(PORT)
-        self.i2c_devices = []
-        self.ls_c_value = None
+        eventbus.on(
+            HexpansionInsertionEvent,
+            self.handle_hexpansion_insertion,
+            self)
+        eventbus.on(
+            HexpansionRemovalEvent,
+            self.handle_hexpansion_removal,
+            self)
         self.button_states = Buttons(self)
-        self._setup_pins()
+        self.scan_i2c()
         super().__init__()
 
-    def _setup_pins(self):
-        ls_a, ls_b, ls_c = self.config.ls_pin[0], self.config.ls_pin[1], self.config.ls_pin[2]
+    def scan_i2c(self):
+        for i, pin in enumerate(HexpansionManagerApp.hexpansion_pins):
+            if not pin.value():
+                petals[i] = HexpansionConfig(i+1)
+                self._setup_pins(petals[i])
+            else:
+                petals[i] = False
+
+    def handle_hexpansion_insertion(self, event):
+        self.scan_i2c()
+
+    def handle_hexpansion_removal(self, event):
+        self.scan_i2c()
+
+    def _setup_pins(self, port):
+        ls_a, ls_b, ls_c = port.ls_pin[0], port.ls_pin[1], port.ls_pin[2]
         ls_c.init(ls_c.IN)
         ls_b.init(ls_b.OUT)
         ls_b.off()        # RSTn LOW: assert hardware reset
@@ -64,22 +86,27 @@ class PetalTestApp(App):
         ls_b.on()         # RSTn HIGH: release reset
         ls_a.on()         # EN HIGH: enable → triggers INITIALIZATION (register reset)
         time.sleep_ms(50) # wait for INITIALIZATION to complete → chip reaches STANDBY
-        self._send(0x00, 0x40)
+        self._send(port, 0x00, 0x40)
         time.sleep_ms(50)
 
-    def led_on(self, num):
-        brightness = led_brightness[num]
+    def led(self, port, num, brightness):
+        brightness = int((brightness / 0xff) * led_brightness[num])
         actual_num = led_map[num]
         addr = 0x14 + actual_num
-        self._send(addr, brightness)
+        self._send(port, addr, brightness)
 
-    def _send(self, addr, data):
-        print(f"Sending: addr [{addr}] data [{data}]... ")
+    def led_on(self, port, num):
+        self.led(port, num, 0xff)
+
+    def led_off(self, port, num):
+        self.led(port, num, 0)
+
+    def _send(self, port, addr, data):
         try:
-            self.config.i2c.writeto(AL5887, bytes([addr, data]))
-            print("done")
+            port.i2c.writeto(AL5887, bytes([addr, data]))
         except Exception as e:
-            print(f"FAILED: {e}")
+            print(f"Sending failed: addr [{addr}] data [{data}]")
+            print(e)
 
     def update(self, delta):
 
@@ -89,7 +116,15 @@ class PetalTestApp(App):
 
         if self.button_states.get(BUTTON_TYPES["RIGHT"]):
             for i in range(36):
-                self.led_on(i)
+                for petal in petals:
+                    if petal:
+                        self.led_on(petal, i)
+
+        if self.button_states.get(BUTTON_TYPES["LEFT"]):
+            for i in range(36):
+                for petal in petals:
+                    if petal:
+                        self.led_off(petal, i)
 
         time.sleep_ms(300)
 
