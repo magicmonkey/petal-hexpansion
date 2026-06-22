@@ -57,6 +57,7 @@ class PetalTestApp(App):
         if self.button_states.get(BUTTON_TYPES["RIGHT"]):
             self._send_range(0x14, 0x37, 0xff, True)
             time.sleep_ms(300)
+            self._send_range(0x14, 0x37, 0x00, True)
 
     def draw(self, ctx):
         ctx.save()
