@@ -89,17 +89,76 @@ class PetalTestApp(App):
         self._send(port, 0x00, 0x40)
         time.sleep_ms(50)
 
-    def led(self, port, num, brightness):
-        brightness = int((brightness / 0xff) * led_brightness[num])
-        actual_num = led_map[num]
-        addr = 0x14 + actual_num
-        self._send(port, addr, brightness)
+    def all_led_off(self):
+        self.all_led_outer_off()
+        self.all_led_middle_off()
+        self.all_led_inner_off()
+
+    def all_led_outer_on(self):
+        for petal in petals:
+            if petal:
+                self.led_outer_on(petal)
+
+    def all_led_outer_off(self):
+        for petal in petals:
+            if petal:
+                self.led_outer_off(petal)
+
+    def all_led_middle_on(self):
+        for petal in petals:
+            if petal:
+                self.led_middle_on(petal)
+
+    def all_led_middle_off(self):
+        for petal in petals:
+            if petal:
+                self.led_middle_off(petal)
+
+    def all_led_inner_on(self):
+        for petal in petals:
+            if petal:
+                self.led_inner_on(petal)
+
+    def all_led_inner_off(self):
+        for petal in petals:
+            if petal:
+                self.led_inner_off(petal)
+
+    def led_outer_on(self, port):
+        for i in range(19):
+            self.led_on(port, i)
+
+    def led_outer_off(self, port):
+        for i in range(19):
+            self.led_off(port, i)
+
+    def led_middle_on(self, port):
+        for i in range(19, 19+12):
+            self.led_on(port, i)
+
+    def led_middle_off(self, port):
+        for i in range(19, 19+12):
+            self.led_off(port, i)
+
+    def led_inner_on(self, port):
+        for i in range(19+12, 19+12+5):
+            self.led_on(port, i)
+
+    def led_inner_off(self, port):
+        for i in range(19+12, 19+12+5):
+            self.led_off(port, i)
 
     def led_on(self, port, num):
         self.led(port, num, 0xff)
 
     def led_off(self, port, num):
         self.led(port, num, 0)
+
+    def led(self, port, num, brightness):
+        brightness = int((brightness / 0xff) * led_brightness[num])
+        actual_num = led_map[num]
+        addr = 0x14 + actual_num
+        self._send(port, addr, brightness)
 
     def _send(self, port, addr, data):
         try:
@@ -115,18 +174,110 @@ class PetalTestApp(App):
             self.minimise()
 
         if self.button_states.get(BUTTON_TYPES["RIGHT"]):
-            for i in range(36):
-                for petal in petals:
-                    if petal:
-                        self.led_on(petal, i)
+            self.anim2()
+            self.anim1()
+            self.anim3()
+            self.anim1()
+            self.anim2()
+            self.anim4()
+            self.anim4()
+            self.anim4()
+            self.anim1()
+
+        if self.button_states.get(BUTTON_TYPES["UP"]):
+            self.anim2()
+
+        if self.button_states.get(BUTTON_TYPES["DOWN"]):
+            self.anim3()
 
         if self.button_states.get(BUTTON_TYPES["LEFT"]):
-            for i in range(36):
-                for petal in petals:
-                    if petal:
-                        self.led_off(petal, i)
+            self.all_led_off()
 
         time.sleep_ms(300)
+
+    def anim1(self):
+        self.all_led_outer_on()
+        time.sleep_ms(250)
+        self.all_led_outer_off()
+        self.all_led_middle_on()
+        time.sleep_ms(250)
+        self.all_led_middle_off()
+        self.all_led_inner_on()
+        time.sleep_ms(250)
+        self.all_led_inner_off()
+
+    def anim2(self):
+        self.led_outer_on(petals[0])
+        time.sleep_ms(200)
+        self.led_outer_on(petals[1])
+        time.sleep_ms(200)
+        self.led_outer_on(petals[2])
+        time.sleep_ms(200)
+        self.led_outer_on(petals[3])
+        time.sleep_ms(200)
+        self.led_outer_on(petals[4])
+        time.sleep_ms(200)
+        self.led_outer_on(petals[5])
+        time.sleep_ms(200)
+        self.led_middle_on(petals[0])
+        time.sleep_ms(200)
+        self.led_middle_on(petals[1])
+        time.sleep_ms(200)
+        self.led_middle_on(petals[2])
+        time.sleep_ms(200)
+        self.led_middle_on(petals[3])
+        time.sleep_ms(200)
+        self.led_middle_on(petals[4])
+        time.sleep_ms(200)
+        self.led_middle_on(petals[5])
+        time.sleep_ms(200)
+        self.led_inner_on(petals[0])
+        time.sleep_ms(200)
+        self.led_inner_on(petals[1])
+        time.sleep_ms(200)
+        self.led_inner_on(petals[2])
+        time.sleep_ms(200)
+        self.led_inner_on(petals[3])
+        time.sleep_ms(200)
+        self.led_inner_on(petals[4])
+        time.sleep_ms(200)
+        self.led_inner_on(petals[5])
+        time.sleep_ms(200)
+
+    def anim3(self):
+        for petal in petals:
+            if not petal:
+                continue
+            for i in range(19-1, 0-1, -1):
+                self.led_on(petal, i)
+                time.sleep_ms(10)
+        for petal in petals:
+            if not petal:
+                continue
+            for i in range(19+12-1, 19-1, -1):
+                self.led_on(petal, i)
+                time.sleep_ms(10)
+        for petal in petals:
+            if not petal:
+                continue
+            for i in range(19+12+5-1, 19+12-1, -1):
+                self.led_on(petal, i)
+                time.sleep_ms(10)
+
+    def anim4(self):
+        self.all_led_outer_on()
+        self.all_led_middle_on()
+        self.all_led_inner_on()
+        time.sleep_ms(300)
+        self.all_led_inner_off()
+        time.sleep_ms(300)
+        self.all_led_inner_on()
+        self.all_led_middle_off()
+        time.sleep_ms(300)
+        self.all_led_middle_on()
+        self.all_led_outer_off()
+        time.sleep_ms(300)
+        self.all_led_outer_on()
 
     def draw(self, ctx):
         ctx.save()
