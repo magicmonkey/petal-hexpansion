@@ -1,5 +1,7 @@
 import asyncio
 
+# from apps.petal.test import __app_export__
+
 from app import App
 from events.input import Buttons, BUTTON_TYPES
 from system.hexpansion.config import HexpansionConfig
@@ -9,7 +11,6 @@ from system.hexpansion.app import HexpansionManagerApp
 import time
 
 AL5887 = 0x30
-PORT = 4
 
 # Need to re-map the LEDs because they're wired up weirdly to the chip
 # This happens _after_ any other LED-based modifiers
@@ -28,9 +29,9 @@ led_map = [
     19, 20,
 ]
 
-OUTER  = 2
-MIDDLE = 64
-INNER  = 2
+OUTER  = 8
+MIDDLE = 255
+INNER  = 8
 
 led_brightness = [
     OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, 
@@ -60,6 +61,19 @@ class PetalTestApp(App):
         self.button_states = Buttons(self)
         self.scan_i2c()
         super().__init__()
+
+    def brightness(self, brt):
+        b = 0
+        if brt > 63:
+            b = 31
+        elif brt > 31:
+            b = brt - 32
+        else:
+            b = brt + 32
+
+        for petal in petals:
+            if petal:
+                self._send(petal, 0x66, b)
 
     def scan_i2c(self):
         for i, pin in enumerate(HexpansionManagerApp.hexpansion_pins):
@@ -154,8 +168,9 @@ class PetalTestApp(App):
     def led_off(self, port, num):
         self.led(port, num, 0)
 
-    def led(self, port, num, brightness):
-        brightness = int((brightness / 0xff) * led_brightness[num])
+    def led(self, port, num, brightness, modulation=True):
+        if modulation:
+            brightness = int((brightness / 0xff) * led_brightness[num])
         actual_num = led_map[num]
         addr = 0x14 + actual_num
         self._send(port, addr, brightness)
@@ -278,6 +293,28 @@ class PetalTestApp(App):
         self.all_led_outer_off()
         time.sleep_ms(300)
         self.all_led_outer_on()
+
+    def anim5(self):
+        self.brightness(0)
+        self.all_led_outer_on()
+        self.all_led_middle_on()
+        self.all_led_inner_on()
+
+        for i in range(0, 64):
+            self.brightness(i)
+            time.sleep_ms(30)
+
+    def anim6(self):
+        petal = petals[0]
+        for count in range(5):
+            for b in range(16):
+                for i in range(19):
+                    self.led(petal, i, b, False)
+                time.sleep_ms(50)
+            for b in range(15, -1, -1):
+                for i in range(19):
+                    self.led(petal, i, b, False)
+                time.sleep_ms(50)
 
     def draw(self, ctx):
         ctx.save()
