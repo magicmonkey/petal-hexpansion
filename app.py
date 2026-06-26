@@ -44,7 +44,7 @@ class PetalTestApp(App):
         self.scan_for_petals()
         super().__init__()
 
-    def select_handler(self, item):
+    def select_handler(self, item, position):
         for name, method in MENU_ITEMS:
             if name == item:
                 getattr(self.petals, method)()

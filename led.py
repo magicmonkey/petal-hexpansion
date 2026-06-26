@@ -19,9 +19,9 @@ led_map = [
     19, 20,
 ]
 
-OUTER  = 8
-MIDDLE = 255
-INNER  = 8
+OUTER  = 4
+MIDDLE = 64
+INNER  = 2
 
 led_brightness = [
     OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, 
@@ -149,6 +149,8 @@ class petals:
         self._send(port, addr, brightness)
 
     def _send(self, port, addr, data):
+        if not port:
+            return
         try:
             port.i2c.writeto(AL5887, bytes([addr, data]))
         except Exception as e:
