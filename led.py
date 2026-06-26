@@ -1,13 +1,3 @@
-import asyncio
-
-# from apps.petal.test import __app_export__
-
-from app import App
-from events.input import Buttons, BUTTON_TYPES
-from system.hexpansion.config import HexpansionConfig
-from system.eventbus import eventbus
-from system.hexpansion.events import HexpansionRemovalEvent, HexpansionInsertionEvent
-from system.hexpansion.app import HexpansionManagerApp
 import time
 
 AL5887 = 0x30
@@ -29,9 +19,9 @@ led_map = [
     19, 20,
 ]
 
-OUTER  = 4
-MIDDLE = 64
-INNER  = 2
+OUTER  = 8
+MIDDLE = 255
+INNER  = 8
 
 led_brightness = [
     OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, OUTER, 
@@ -39,55 +29,25 @@ led_brightness = [
     INNER, INNER, INNER, INNER, INNER, 
 ]
 
-petals = [
-    False,
-    False,
-    False,
-    False,
-    False,
-    False,
-]
 
-class PetalTestApp(App):
+class petals:
+
     def __init__(self):
-        eventbus.on(
-            HexpansionInsertionEvent,
-            self.handle_hexpansion_insertion,
-            self)
-        eventbus.on(
-            HexpansionRemovalEvent,
-            self.handle_hexpansion_removal,
-            self)
-        self.button_states = Buttons(self)
-        self.scan_i2c()
-        super().__init__()
+        self.petals = [
+            False,
+            False,
+            False,
+            False,
+            False,
+            False,
+        ]
 
-    def brightness(self, brt):
-        b = 0
-        if brt > 63:
-            b = 31
-        elif brt > 31:
-            b = brt - 32
-        else:
-            b = brt + 32
+    def set_petal(self, petal, num):
+        self.petals[num] = petal
+        self._setup_pins(self.petals[num])
 
-        for petal in petals:
-            if petal:
-                self._send(petal, 0x66, b)
-
-    def scan_i2c(self):
-        for i, pin in enumerate(HexpansionManagerApp.hexpansion_pins):
-            if not pin.value():
-                petals[i] = HexpansionConfig(i+1)
-                self._setup_pins(petals[i])
-            else:
-                petals[i] = False
-
-    def handle_hexpansion_insertion(self, event):
-        self.scan_i2c()
-
-    def handle_hexpansion_removal(self, event):
-        self.scan_i2c()
+    def remove_petal(self, num):
+        self.petals[num] = False
 
     def _setup_pins(self, port):
         ls_a, ls_b, ls_c = port.ls_pin[0], port.ls_pin[1], port.ls_pin[2]
@@ -103,38 +63,51 @@ class PetalTestApp(App):
         self._send(port, 0x00, 0x40)
         time.sleep_ms(50)
 
+    def brightness(self, brt):
+        b = 0
+        if brt > 63:
+            b = 31
+        elif brt > 31:
+            b = brt - 32
+        else:
+            b = brt + 32
+
+        for petal in self.petals:
+            if petal:
+                self._send(petal, 0x66, b)
+
     def all_led_off(self):
         self.all_led_outer_off()
         self.all_led_middle_off()
         self.all_led_inner_off()
 
     def all_led_outer_on(self):
-        for petal in petals:
+        for petal in self.petals:
             if petal:
                 self.led_outer_on(petal)
 
     def all_led_outer_off(self):
-        for petal in petals:
+        for petal in self.petals:
             if petal:
                 self.led_outer_off(petal)
 
     def all_led_middle_on(self):
-        for petal in petals:
+        for petal in self.petals:
             if petal:
                 self.led_middle_on(petal)
 
     def all_led_middle_off(self):
-        for petal in petals:
+        for petal in self.petals:
             if petal:
                 self.led_middle_off(petal)
 
     def all_led_inner_on(self):
-        for petal in petals:
+        for petal in self.petals:
             if petal:
                 self.led_inner_on(petal)
 
     def all_led_inner_off(self):
-        for petal in petals:
+        for petal in self.petals:
             if petal:
                 self.led_inner_off(petal)
 
@@ -168,10 +141,6 @@ class PetalTestApp(App):
     def led_off(self, port, num):
         self.led(port, num, 0)
 
-    def leds(self, ports, num, brightness, modulation=True):
-        for port in ports:
-            self.led(port, num, brightness, modulation)
-
     def led(self, port, num, brightness, modulation=True):
         if modulation:
             brightness = int((brightness / 0xff) * led_brightness[num])
@@ -186,34 +155,6 @@ class PetalTestApp(App):
             print(f"Sending failed: addr [{addr}] data [{data}]")
             print(e)
 
-    def update(self, delta):
-
-        if self.button_states.get(BUTTON_TYPES["CANCEL"]):
-            self.button_states.clear()
-            self.minimise()
-
-        if self.button_states.get(BUTTON_TYPES["RIGHT"]):
-            self.anim2()
-            self.anim1()
-            self.anim3()
-            self.anim1()
-            self.anim2()
-            self.anim4()
-            self.anim4()
-            self.anim4()
-            self.anim1()
-
-        if self.button_states.get(BUTTON_TYPES["UP"]):
-            self.anim2()
-
-        if self.button_states.get(BUTTON_TYPES["DOWN"]):
-            self.anim7()
-
-        if self.button_states.get(BUTTON_TYPES["LEFT"]):
-            self.all_led_off()
-
-        time.sleep_ms(300)
-
     def anim1(self):
         self.all_led_outer_on()
         time.sleep_ms(250)
@@ -226,57 +167,57 @@ class PetalTestApp(App):
         self.all_led_inner_off()
 
     def anim2(self):
-        self.led_outer_on(petals[0])
+        self.led_outer_on(self.petals[0])
         time.sleep_ms(200)
-        self.led_outer_on(petals[1])
+        self.led_outer_on(self.petals[1])
         time.sleep_ms(200)
-        self.led_outer_on(petals[2])
+        self.led_outer_on(self.petals[2])
         time.sleep_ms(200)
-        self.led_outer_on(petals[3])
+        self.led_outer_on(self.petals[3])
         time.sleep_ms(200)
-        self.led_outer_on(petals[4])
+        self.led_outer_on(self.petals[4])
         time.sleep_ms(200)
-        self.led_outer_on(petals[5])
+        self.led_outer_on(self.petals[5])
         time.sleep_ms(200)
-        self.led_middle_on(petals[0])
+        self.led_middle_on(self.petals[0])
         time.sleep_ms(200)
-        self.led_middle_on(petals[1])
+        self.led_middle_on(self.petals[1])
         time.sleep_ms(200)
-        self.led_middle_on(petals[2])
+        self.led_middle_on(self.petals[2])
         time.sleep_ms(200)
-        self.led_middle_on(petals[3])
+        self.led_middle_on(self.petals[3])
         time.sleep_ms(200)
-        self.led_middle_on(petals[4])
+        self.led_middle_on(self.petals[4])
         time.sleep_ms(200)
-        self.led_middle_on(petals[5])
+        self.led_middle_on(self.petals[5])
         time.sleep_ms(200)
-        self.led_inner_on(petals[0])
+        self.led_inner_on(self.petals[0])
         time.sleep_ms(200)
-        self.led_inner_on(petals[1])
+        self.led_inner_on(self.petals[1])
         time.sleep_ms(200)
-        self.led_inner_on(petals[2])
+        self.led_inner_on(self.petals[2])
         time.sleep_ms(200)
-        self.led_inner_on(petals[3])
+        self.led_inner_on(self.petals[3])
         time.sleep_ms(200)
-        self.led_inner_on(petals[4])
+        self.led_inner_on(self.petals[4])
         time.sleep_ms(200)
-        self.led_inner_on(petals[5])
+        self.led_inner_on(self.petals[5])
         time.sleep_ms(200)
 
     def anim3(self):
-        for petal in petals:
+        for petal in self.petals:
             if not petal:
                 continue
             for i in range(19-1, 0-1, -1):
                 self.led_on(petal, i)
                 time.sleep_ms(10)
-        for petal in petals:
+        for petal in self.petals:
             if not petal:
                 continue
             for i in range(19+12-1, 19-1, -1):
                 self.led_on(petal, i)
                 time.sleep_ms(10)
-        for petal in petals:
+        for petal in self.petals:
             if not petal:
                 continue
             for i in range(19+12+5-1, 19+12-1, -1):
@@ -309,7 +250,7 @@ class PetalTestApp(App):
             time.sleep_ms(30)
 
     def anim6(self):
-        petal = petals[0]
+        petal = self.petals[0]
         for count in range(5):
             for b in range(16):
                 for i in range(19):
@@ -319,43 +260,3 @@ class PetalTestApp(App):
                 for i in range(19):
                     self.led(petal, i, b, False)
                 time.sleep_ms(50)
-
-    def anim7(self):
-        self.all_led_off()
-        delay = 20
-        interim = 0x40
-        for i in range(10):
-            p = [petals[1], petals[4]]
-            for i in range(0, 16):
-                self.leds(p, i, 0x0)
-                self.leds(p, i+1, interim)
-                self.leds(p, i+2, 0xff)
-                self.leds(p, i+3, interim)
-                time.sleep_ms(delay)
-
-            self.leds(p, 16, 0x0)
-            self.leds(p, 17, interim)
-            self.leds(p, 18, 0xff)
-            self.leds(p, 0, interim)
-            time.sleep_ms(delay)
-
-            self.leds(p, 17, 0x0)
-            self.leds(p, 18, interim)
-            self.leds(p, 0, 0xff)
-            self.leds(p, 1, interim)
-            time.sleep_ms(delay)
-
-            self.leds(p, 18, 0x0)
-            self.leds(p, 0, interim)
-            self.leds(p, 1, 0xff)
-            self.leds(p, 2, interim)
-            time.sleep_ms(delay)
-
-    def draw(self, ctx):
-        ctx.save()
-        ctx.rgb(0.2, 0, 0).rectangle(-120, -120, 240, 240).fill()
-        ctx.rgb(1, 0, 0).move_to(-80, 0).text("Hello world")
-        ctx.restore()
-
-
-__app_export__ = PetalTestApp
