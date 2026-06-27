@@ -1,4 +1,5 @@
 import sys
+import os
 
 from app import App
 from app_components import Menu, clear_background
@@ -11,12 +12,21 @@ import time
 
 sys.path.insert(0, '/apps/petal')
 from led import petals
-from animations import anim1, anim2
 
-MENU_ITEMS = [
-    "Anim 1",
-    "Anim 2",
-]
+def _discover_animations():
+    anim_dir = sys.path[0] + '/animations'
+    discovered = []
+    try:
+        for filename in sorted(os.listdir(anim_dir)):
+            if filename.endswith('.py') and filename != '__init__.py':
+                module_name = filename[:-3]
+                top = __import__('animations.' + module_name)
+                module = getattr(top, module_name)
+                name = getattr(module, 'NAME', module_name)
+                discovered.append((name, module))
+    except OSError:
+        pass
+    return discovered
 
 class PetalTestApp(App):
     def __init__(self):
@@ -29,9 +39,10 @@ class PetalTestApp(App):
             self.handle_hexpansion_removal,
             self)
         self.button_states = Buttons(self)
+        self.animations = _discover_animations()
         self.menu = Menu(
             self,
-            MENU_ITEMS,
+            [name for name, _ in self.animations],
             select_handler=self.select_handler,
             back_handler=self.back_handler,
         )
@@ -40,10 +51,8 @@ class PetalTestApp(App):
         super().__init__()
 
     def select_handler(self, item, position):
-        if item == "Anim 1":
-            anim1.anim(self.petals)
-        elif item == "Anim 2":
-            anim2.anim(self.petals)
+        _, module = self.animations[position]
+        module.anim(self.petals)
 
     def back_handler(self):
         self.minimise()
