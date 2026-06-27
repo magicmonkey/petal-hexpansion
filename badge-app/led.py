@@ -66,6 +66,7 @@ class petals:
 
         self.brightness(5)
 
+    # Brightness setting, 0-64.  Uses the 0x66 register on the AL5887
     def brightness(self, brt):
         b = 0
         if brt > 63:
