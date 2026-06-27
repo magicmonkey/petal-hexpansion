@@ -44,13 +44,14 @@ class petals:
 
     def set_petal(self, petal, num):
         self.petals[num] = petal
-        self._setup_pins(self.petals[num])
+        self._setup_pins(num)
 
     def remove_petal(self, num):
         self.petals[num] = False
 
     def _setup_pins(self, port):
-        ls_a, ls_b, ls_c = port.ls_pin[0], port.ls_pin[1], port.ls_pin[2]
+        gpio = self.petals[port]
+        ls_a, ls_b, ls_c = gpio.ls_pin[0], gpio.ls_pin[1], gpio.ls_pin[2]
         ls_c.init(ls_c.IN)
         ls_b.init(ls_b.OUT)
         ls_b.off()        # RSTn LOW: assert hardware reset
@@ -74,9 +75,8 @@ class petals:
         else:
             b = brt + 32
 
-        for petal in self.petals:
-            if petal:
-                self._send(petal, 0x66, b)
+        for petal in range(6):
+            self._send(petal, 0x66, b)
 
     def all_led_off(self):
         self.all_led_outer_off()
@@ -145,10 +145,10 @@ class petals:
         self._send(port, addr, brightness)
 
     def _send(self, port, addr, data):
-        if not port:
+        if not self.petals[port]:
             return
         try:
-            port.i2c.writeto(AL5887, bytes([addr, data]))
+            self.petals[port].i2c.writeto(AL5887, bytes([addr, data]))
         except Exception as e:
             print(f"Sending failed: addr [{addr}] data [{data}]")
             print(e)
