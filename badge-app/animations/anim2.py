@@ -1,12 +1,12 @@
-import time
+import asyncio
 
 NAME = "Continuous"
 
-def anim(petals):
-    for i in range(10):
+async def anim(petals):
+    while True:
         for i in range(6):
             petals.led_outer_on(i)
-            time.sleep_ms(300)
+            await asyncio.sleep_ms(300)
             petals.led_outer_off(i)
 
 

@@ -1,5 +1,6 @@
 import sys
 import os
+import asyncio
 
 from app import App
 from app_components import Menu, clear_background
@@ -40,6 +41,7 @@ class PetalTestApp(App):
             self)
         self.button_states = Buttons(self)
         self.animations = _discover_animations()
+        self.current_anim_task = None
         self.menu = Menu(
             self,
             [name for name, _ in self.animations],
@@ -51,8 +53,10 @@ class PetalTestApp(App):
         super().__init__()
 
     def select_handler(self, item, position):
+        if self.current_anim_task is not None:
+            self.current_anim_task.cancel()
         _, module = self.animations[position]
-        module.anim(self.petals)
+        self.current_anim_task = asyncio.create_task(module.anim(self.petals))
 
     def back_handler(self):
         self.minimise()

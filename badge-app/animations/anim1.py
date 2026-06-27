@@ -1,10 +1,10 @@
-import time
+import asyncio
 
 NAME = "Simple"
 
-def anim(petals):
+async def anim(petals):
     petals.all_led_outer_on()
-    time.sleep_ms(1000)
+    await asyncio.sleep_ms(1000)
     petals.all_led_off()
 
 
