@@ -55,6 +55,7 @@ class PetalApp(App):
     def select_handler(self, item, position):
         if self.current_anim_task is not None:
             self.current_anim_task.cancel()
+        self.petals.all_led_off()
         _, module = self.animations[position]
         self.current_anim_task = asyncio.create_task(module.anim(self.petals))
 

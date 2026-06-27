@@ -17,12 +17,12 @@ async def outer_loop(petals):
     while True:
         for i in range(6):
             petals.led_outer_on(i)
-            await asyncio.sleep_ms(300)
+            await asyncio.sleep_ms(450)
             petals.led_outer_off(i)
 
 async def middle_loop(petals):
     while True:
         for i in range(6):
             petals.led_middle_on(5-i)
-            await asyncio.sleep_ms(280)
+            await asyncio.sleep_ms(210)
             petals.led_middle_off(5-i)
