@@ -63,6 +63,8 @@ class petals:
         self._send(port, 0x00, 0x40)
         time.sleep_ms(50)
 
+        self.brightness(5)
+
     def brightness(self, brt):
         b = 0
         if brt > 63:
@@ -82,34 +84,28 @@ class petals:
         self.all_led_inner_off()
 
     def all_led_outer_on(self):
-        for petal in self.petals:
-            if petal:
-                self.led_outer_on(petal)
+        for p in range(6):
+            self.led_outer_on(p)
 
     def all_led_outer_off(self):
-        for petal in self.petals:
-            if petal:
-                self.led_outer_off(petal)
+        for p in range(6):
+            self.led_outer_off(p)
 
     def all_led_middle_on(self):
-        for petal in self.petals:
-            if petal:
-                self.led_middle_on(petal)
+        for p in range(6):
+            self.led_middle_on(p)
 
     def all_led_middle_off(self):
-        for petal in self.petals:
-            if petal:
-                self.led_middle_off(petal)
+        for p in range(6):
+            self.led_middle_off(p)
 
     def all_led_inner_on(self):
-        for petal in self.petals:
-            if petal:
-                self.led_inner_on(petal)
+        for p in range(6):
+            self.led_inner_on(p)
 
     def all_led_inner_off(self):
-        for petal in self.petals:
-            if petal:
-                self.led_inner_off(petal)
+        for p in range(6):
+            self.led_inner_off(p)
 
     def led_outer_on(self, port):
         for i in range(19):

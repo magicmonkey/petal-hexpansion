@@ -12,15 +12,10 @@ import time
 
 sys.path.insert(0, '/apps/petal')
 from led import petals
+from animations import anim1
 
 MENU_ITEMS = [
-    ("Ripple",   "anim1"),
-    ("Spiral",   "anim2"),
-    ("Fill",     "anim3"),
-    ("Pulse",    "anim4"),
-    ("Fade In",  "anim5"),
-    ("Shimmer",  "anim6"),
-    ("Lights Off", "all_led_off"),
+    ("Anim 1",   "anim1"),
 ]
 
 class PetalTestApp(App):
@@ -45,10 +40,9 @@ class PetalTestApp(App):
         super().__init__()
 
     def select_handler(self, item, position):
-        for name, method in MENU_ITEMS:
-            if name == item:
-                getattr(self.petals, method)()
-                return
+        if item == "Anim 1":
+            anim1.anim(self.petals)
+            return
 
     def back_handler(self):
         self.minimise()
