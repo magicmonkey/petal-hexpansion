@@ -1,6 +1,6 @@
 import asyncio
 
-NAME = "Continuous"
+NAME = "Wheel"
 
 async def anim(petals):
     while True:
