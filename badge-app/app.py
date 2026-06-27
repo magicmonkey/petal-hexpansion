@@ -11,10 +11,11 @@ import time
 
 sys.path.insert(0, '/apps/petal')
 from led import petals
-from animations import anim1
+from animations import anim1, anim2
 
 MENU_ITEMS = [
-    ("Anim 1",   "anim1"),
+    "Anim 1",
+    "Anim 2",
 ]
 
 class PetalTestApp(App):
@@ -30,7 +31,7 @@ class PetalTestApp(App):
         self.button_states = Buttons(self)
         self.menu = Menu(
             self,
-            [name for name, _ in MENU_ITEMS],
+            MENU_ITEMS,
             select_handler=self.select_handler,
             back_handler=self.back_handler,
         )
@@ -41,7 +42,8 @@ class PetalTestApp(App):
     def select_handler(self, item, position):
         if item == "Anim 1":
             anim1.anim(self.petals)
-            return
+        elif item == "Anim 2":
+            anim2.anim(self.petals)
 
     def back_handler(self):
         self.minimise()
