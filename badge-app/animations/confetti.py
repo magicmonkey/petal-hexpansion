@@ -1,5 +1,7 @@
-import time
+import asyncio
 import random
+
+NAME = "Confetti"
 
 INNER_BAND_COUNT = 5
 MIDDLE_BAND_COUNT = 12
@@ -17,10 +19,10 @@ band_offset = {
     2: OUTER_BAND_COUNT + MIDDLE_BAND_COUNT,
 }
 
-def anim(petals):
+async def anim(petals):
     petals.all_led_off()
     for i in range(50):
-        time.sleep_ms(100)
+        await asyncio.sleep_ms(100)
         led_random(petals)
 
 def led_random(petals):
