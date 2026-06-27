@@ -1,5 +1,7 @@
 import time
 
+NAME = "Simple"
+
 def anim(petals):
     petals.all_led_outer_on()
     time.sleep_ms(1000)
