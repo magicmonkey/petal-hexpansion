@@ -29,7 +29,7 @@ def _discover_animations():
         pass
     return discovered
 
-class PetalTestApp(App):
+class PetalApp(App):
     def __init__(self):
         eventbus.on(
             HexpansionInsertionEvent,
@@ -82,4 +82,4 @@ class PetalTestApp(App):
         self.menu.draw(ctx)
 
 
-__app_export__ = PetalTestApp
+__app_export__ = PetalApp
