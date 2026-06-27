@@ -141,7 +141,7 @@ class petals:
         if modulation:
             brightness = int((brightness / 0xff) * led_brightness[num])
         actual_num = led_map[num]
-        addr = 0x14 + actual_num
+        addr = 0x14 + actual_num  # From the AL5887 datasheet, the individual LED control starts at 0x14
         self._send(port, addr, brightness)
 
     def _send(self, port, addr, data):
