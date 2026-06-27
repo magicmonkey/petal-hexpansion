@@ -108,6 +108,15 @@ class petals:
         for p in range(6):
             self.led_inner_off(p)
 
+    def one_led_on(self, i):
+        for p in range(6):
+            self.led_on(p, i)
+
+    def one_led_off(self, i):
+        for p in range(6):
+            self.led_off(p, i)
+
+
     def led_outer_on(self, port):
         for i in range(19):
             self.led_on(port, i)
