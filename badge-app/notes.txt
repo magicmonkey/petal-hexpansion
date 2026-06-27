@@ -1,1 +1,2 @@
-mpremote cp * :/apps/petal/
+mpremote cp -r * :/apps/petal/
+
