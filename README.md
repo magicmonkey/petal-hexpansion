@@ -6,3 +6,5 @@ PCB schematics are in this repo, and the badge app software is in https://github
 
 Use the "Petals" app in the badge app store to see some LED animations.
 
+![Example image](IMG_7687.gif)
+
